@@ -27,6 +27,7 @@ public class StopAndWaitARQ_Sender {
                 sender.sendPacketWithError(packet, currSeqNumber, isLastPacket);
 
             }
+
             catch (IOException e){
                 System.out.println("Error: " + e);
             }
