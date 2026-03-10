@@ -30,6 +30,7 @@ public class StopAndWaitARQ_Sender {
 
             catch (IOException e){
                 System.out.println("Error: " + e);
+
             }
 
         }
