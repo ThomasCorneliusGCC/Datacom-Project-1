@@ -38,9 +38,13 @@ public class SelectiveAndRepeatARQ_Sender {
         Boolean finished = false;
 
         // TODO: Task 3.a, Your code below
-
+        int i = 0;
+        int lastACK = 0;
+        int ackCount = 0;
+        System.out.println("N = " + N);
         while(!finished){
-            //try {
+            System.out.println("here");
+            try {
                 // notice: use sender.sendPacketWithLost() to send out packet
                 // but, to resend the lost packet after receiving NAK,
                 // use sender.sendPacket(), otherwise, the receiver may not get the resent packet and get stuck
@@ -48,10 +52,42 @@ public class SelectiveAndRepeatARQ_Sender {
 
 
 
-            //}catch (IOException e){
-            //    System.err.println("Error transmitting packet: " + e.getMessage());
-            //    return;
-            //}
+                while (i < winSize + winBase && i<N){
+
+                    if((i != N-1)) {
+                        sender.sendPacketWithLost(packets.get(i), (char) i, false);
+                    } else {
+                        sender.sendPacket(packets.get(i).getPacket(),(char)i, true);
+                    }
+                    System.out.println("sending packet: " + i);
+
+                    i++;
+                }
+
+                System.out.println("base: " + winBase);
+                response = sender.waitForResponse();
+                if (response[0] == ACK) {
+                    if(lastACK > (int)response[1]){
+                        ackCount += 256;
+                    }
+                    System.out.println("ACK: " + (int) response[1] + " + " + (ackCount/MAX_SEQ_NUM)*TOTAL_SEQ_NUM);
+
+                    winBase = (int)response[1]+((ackCount/MAX_SEQ_NUM)*TOTAL_SEQ_NUM);
+                    lastACK = (int)response[1];
+                } else if (response[0] == NAK) {
+                    System.out.println("NAK: " + (int) response[1]);
+                    sender.sendPacket(packets.get(response[1]).getPacket(), response[1], false);
+                }
+                if(winBase >= N){
+                    System.out.println(winBase);
+                    finished = true;
+                }
+
+
+            }catch (IOException e){
+                System.err.println("Error transmitting packet: " + e);
+                return;
+            }
         }
     }
 
