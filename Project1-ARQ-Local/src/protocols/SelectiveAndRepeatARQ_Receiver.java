@@ -79,10 +79,46 @@ public class SelectiveAndRepeatARQ_Receiver {
                 // TODO: Task 3.b, Your code below
 
 
+                flags[packetIndex] = true;
+                receivedData.set(packetIndex, packet.getData());
+                if(packetIndex == winBase){
+                    // in order frame
+                    while (winBase < N && flags[winBase]){
+                        winBase++;
+                    }
+                    out.writeChar(ACK);
+                    out.writeChar((packetIndex+1)%TOTAL_SEQ_NUM);
+                    out.flush();
+
+                } else {
+
+                    for (int i = winBase; i < winBase + winSize && i < flags.length && i < packetIndex; i++) {
+                        if(!flags[i]){
+                            if(!nak_packets.contains(i)) {
+                                out.writeChar(NAK);
+                                out.writeChar(i);
+                                System.out.println("NAK: "+ i);
+                                out.flush();
+                                nak_packets.add(i);
+                            }
+                        }
+                    }
+                }
+
+                for (Boolean flag : flags) {
+                    if (flag) {
+                        running = false;
+                    } else {
+                        running = true;
+                        break;
+                    }
+                }
+
+
 
             } catch (IOException e) {
                 if (running) {
-                    System.err.println("Error handling client: " + e.getMessage());
+                    //System.err.println("Error handling client: " + e.getMessage());
                 }
             }
         }
